@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.venv/
+out/
+review-log.json
+.DS_Store

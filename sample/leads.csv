@@ -1,0 +1,7 @@
+date_found,company,title,status,date_applied,last_contact,url
+2026-08-01,Northwind Software,Implementation Specialist,applied,2026-08-20,,https://example.com/jobs/1
+2026-08-03,Harbor Analytics,Applications Analyst,applied,2026-09-01,2026-09-10,https://example.com/jobs/2
+2026-08-05,Pine Street Systems,Support Specialist I,applied,2026-09-14,,https://example.com/jobs/3
+2026-08-07,Lakeside Tools,Automation Analyst,lead,,,https://example.com/jobs/4
+2026-08-09,Old Mill Payroll,Onboarding Specialist,rejected,2026-08-10,2026-08-15,https://example.com/jobs/5
+2026-08-11,Granite Data,QA Analyst,applied,not-a-date,,https://example.com/jobs/6
