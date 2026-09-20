@@ -31,4 +31,37 @@ def find_stale(rows, today: datetime.date, days: int = 7):
     `stale` is a list of StaleRow sorted by days_quiet, longest first.
     `problems` is a list of RowProblem for applied rows with unreadable dates.
     """
-    raise NotImplementedError("Connor: implement me; tests/test_stale.py describes the behaviour")
+    stale = []
+    problems = []
+
+    for idx, r in enumerate(rows):
+        line = idx + 2
+        status = (r.get("status") or "").strip().lower()
+        if status != "applied":
+            continue
+
+        company = r.get("company", "")
+        title = r.get("title", "")
+        url = r.get("url", "")
+        last_contact = (r.get("last_contact") or "").strip()
+        date_applied = (r.get("date_applied") or "").strip()
+
+        date_str = last_contact if last_contact else date_applied
+        field_name = "last_contact" if last_contact else "date_applied"
+
+        if not date_str:
+            problems.append(RowProblem(line, company, "no date_applied or last_contact found"))
+            continue
+
+        try:
+            ref_date = datetime.date.fromisoformat(date_str)
+        except Exception:
+            problems.append(RowProblem(line, company, f"{field_name} is not a date: '{date_str}'"))
+            continue
+
+        days_quiet = (today - ref_date).days
+        if days_quiet >= days:
+            stale.append(StaleRow(company=company, title=title, url=url, days_quiet=days_quiet))
+
+    stale.sort(key=lambda s: s.days_quiet, reverse=True)
+    return stale, problems

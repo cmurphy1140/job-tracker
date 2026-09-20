@@ -10,4 +10,16 @@ def render(stale, problems, today) -> str:
       - if there are none: the line "Nothing is waiting on a reply."
       - if there are problems: a "Needs fixing" section listing line number and reason
     """
-    raise NotImplementedError("Connor: implement me; tests/test_digest.py describes the behaviour")
+    lines = [f"Tracker digest for {today}"]
+    if not stale:
+        lines.append("Nothing is waiting on a reply.")
+    else:
+        for s in stale:
+            lines.append(f"{s.company} | {s.title} | {s.days_quiet} days quiet | {s.url}")
+
+    if problems:
+        lines.extend(["", "Needs fixing:"])
+        for p in problems:
+            lines.append(f"  line {p.line}: {p.company} - {p.reason}")
+
+    return "\n".join(lines)
