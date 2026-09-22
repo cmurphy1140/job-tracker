@@ -1,0 +1,176 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Tracker Digest Architecture & Human Review Pipeline",
+    "quality_profile": "showcase",
+    "viewBox": [1160, 520],
+    "views": [
+      {
+        "id": "stale-detection",
+        "label": "CSV Parsing & Stale Detection",
+        "focus": ["tracker-csv", "cli-entry", "stale-engine", "error-collector", "review-gate"],
+        "note": "Trace how application rows are parsed, filtered for 7-day inactivity, and checked for malformed dates."
+      },
+      {
+        "id": "review-and-draft",
+        "label": "Human Review & Digest Generation",
+        "focus": ["stale-engine", "review-gate", "review-log", "digest-formatter", "gmail-draft"],
+        "note": "Examine how human approval gates prevent incorrect messages, persist audit trails, and format output."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "tracker-csv",
+      "type": "database",
+      "label": "Application Tracker",
+      "sublabel": "leads.csv status & dates",
+      "pos": [40, 210],
+      "size": [150, 64]
+    },
+    {
+      "id": "cli-entry",
+      "type": "backend",
+      "label": "CLI Controller",
+      "sublabel": "cli.py argument parser",
+      "pos": [250, 210],
+      "size": [160, 64]
+    },
+    {
+      "id": "stale-engine",
+      "type": "backend",
+      "label": "Stale Detector",
+      "sublabel": "find_stale 7-day rule",
+      "pos": [480, 210],
+      "size": [160, 64]
+    },
+    {
+      "id": "error-collector",
+      "type": "backend",
+      "label": "Needs Fixing Log",
+      "sublabel": "Unreadable date reporter",
+      "pos": [480, 50],
+      "size": [160, 64]
+    },
+    {
+      "id": "review-gate",
+      "type": "security",
+      "label": "Human Review Gate",
+      "sublabel": "Interactive operator prompt",
+      "pos": [710, 210],
+      "size": [160, 64]
+    },
+    {
+      "id": "review-log",
+      "type": "database",
+      "label": "Review Audit Log",
+      "sublabel": "review-log.json append-only",
+      "pos": [710, 370],
+      "size": [160, 64]
+    },
+    {
+      "id": "digest-formatter",
+      "type": "frontend",
+      "label": "Digest Formatter",
+      "sublabel": "digest.py text layout",
+      "pos": [950, 210],
+      "size": [160, 64]
+    },
+    {
+      "id": "gmail-draft",
+      "type": "cloud",
+      "label": "Draft Outbox",
+      "sublabel": "Draft stage (never auto-send)",
+      "pos": [950, 370],
+      "size": [160, 64]
+    }
+  ],
+  "connections": [
+    {
+      "id": "csv-to-cli",
+      "from": "tracker-csv",
+      "to": "cli-entry",
+      "label": "reads CSV",
+      "variant": "emphasis",
+      "labelDy": -14
+    },
+    {
+      "id": "cli-to-stale",
+      "from": "cli-entry",
+      "to": "stale-engine",
+      "label": "rows",
+      "variant": "emphasis",
+      "labelDy": -14
+    },
+    {
+      "id": "stale-to-error",
+      "from": "stale-engine",
+      "to": "error-collector",
+      "label": "flags bad dates",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "labelAt": [560, 162]
+    },
+    {
+      "id": "stale-to-review",
+      "from": "stale-engine",
+      "to": "review-gate",
+      "label": "stale leads",
+      "variant": "emphasis",
+      "labelDy": -14
+    },
+    {
+      "id": "review-to-log",
+      "from": "review-gate",
+      "to": "review-log",
+      "label": "appends decision",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [790, 322]
+    },
+    {
+      "id": "review-to-digest",
+      "from": "review-gate",
+      "to": "digest-formatter",
+      "label": "approved",
+      "variant": "emphasis",
+      "labelDy": -14
+    },
+    {
+      "id": "digest-to-draft",
+      "from": "digest-formatter",
+      "to": "gmail-draft",
+      "label": "stages draft",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [1030, 322]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Deterministic Quiet-Period Rule",
+      "items": [
+        "Identifies applications where last touchpoint exceeds 7 days without dropping status",
+        "Bad data (missing or unparseable dates) is explicitly isolated under Needs Fixing with exact line numbers"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Mandatory Human Review Gate",
+      "items": [
+        "Interactive CLI review forces operator confirmation on each prospective digest item",
+        "Audit trail appends every approval or skip decision to an immutable review-log.json file"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Zero-Dependency Reliability",
+      "items": [
+        "Pure Python 3.10+ standard library implementation ensures instant portable execution",
+        "Outbox pipeline restricts actions to draft generation, preventing unintended automatic email dispatches"
+      ]
+    }
+  ]
+}

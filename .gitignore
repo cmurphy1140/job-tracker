@@ -4,3 +4,7 @@ __pycache__/
 out/
 review-log.json
 .DS_Store
+
+# generated diagram screenshots
+docs/**/*.visual-check.*
+__pycache__/
