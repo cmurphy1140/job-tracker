@@ -35,7 +35,7 @@ def find_stale(rows, today: datetime.date, days: int = 7):
     problems = []
 
     for idx, r in enumerate(rows):
-        line = idx + 2
+        line = r.get("_line", idx + 2)
         status = (r.get("status") or "").strip().lower()
         if status != "applied":
             continue

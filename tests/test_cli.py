@@ -30,6 +30,23 @@ class TestCli(unittest.TestCase):
             self.assertIn("Granite Data", output)
             self.assertTrue(log_path.exists())
 
+    def test_blank_line_does_not_shift_reported_problem_line(self):
+        # Header is line 1, a blank line is line 2, the bad row is line 3.
+        csv_text = (
+            "date_found,company,title,status,date_applied,last_contact,url\n"
+            "\n"
+            "2026-08-01,Bad,Role,applied,not-a-date,,https://example.com\n"
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            csv_path = Path(tmpdir) / "leads.csv"
+            csv_path.write_text(csv_text)
+            log_path = Path(tmpdir) / "review-log.json"
+            with patch("sys.stdout", new_callable=io.StringIO) as mock_stdout:
+                main([str(csv_path), "--today", "2026-09-18", "--log", str(log_path)])
+            output = mock_stdout.getvalue()
+            self.assertIn("line 3: Bad", output)
+            self.assertNotIn("line 2: Bad", output)
+
 
 if __name__ == "__main__":
     unittest.main()
