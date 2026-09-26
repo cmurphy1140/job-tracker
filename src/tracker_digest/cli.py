@@ -1,10 +1,11 @@
-"""Command line entry point:  python -m tracker_digest.cli draft sample/leads.csv
+"""Command line entry point:  python -m tracker_digest.cli sample/leads.csv
 
-Two subcommands (milestone 3, see docs/milestone-3-design.md):
-  auth   one-time OAuth sign-in; stores the client secret and refresh token
-         in the Keychain.
-  draft  reviews the tracker as before, then creates a Gmail draft from the
-         approved items.
+Subcommands (milestone 3, see docs/milestone-3-design.md):
+  review  (the default) reviews the tracker and prints the digest; no Gmail.
+  auth    one-time OAuth sign-in; stores the client secret and refresh token
+          in the Keychain.
+  draft   reviews the tracker, then creates a Gmail draft from the approved
+          items.
 """
 import argparse
 import csv
@@ -29,7 +30,7 @@ def _run_auth(args):
     return 0
 
 
-def _run_draft(args):
+def _review_tracker(args):
     with open(args.csv_path, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         rows = []
@@ -44,7 +45,16 @@ def _run_draft(args):
 
     approved = review(stale, ask, args.log)
     print(render(approved, problems, args.today))
+    return approved
 
+
+def _run_review(args):
+    _review_tracker(args)
+    return 0
+
+
+def _run_draft(args):
+    approved = _review_tracker(args)
     if not approved:
         return 0
 
@@ -70,13 +80,20 @@ def main(argv=None):
     auth_parser.add_argument("--client-secret", required=True, help="Path to the OAuth client JSON downloaded from Google Cloud Console.")
     auth_parser.set_defaults(func=_run_auth)
 
-    draft_parser = subparsers.add_parser("draft", help="Review the tracker and create a Gmail draft from the approved items.")
-    draft_parser.add_argument("csv_path")
-    draft_parser.add_argument("--days", type=int, default=7)
-    draft_parser.add_argument("--today", type=datetime.date.fromisoformat, default=datetime.date.today())
-    draft_parser.add_argument("--log", default="review-log.json")
-    draft_parser.set_defaults(func=_run_draft)
+    for name, func, help_text in (
+        ("review", _run_review, "Review the tracker and print the digest (the default)."),
+        ("draft", _run_draft, "Review the tracker and create a Gmail draft from the approved items."),
+    ):
+        sub = subparsers.add_parser(name, help=help_text)
+        sub.add_argument("csv_path")
+        sub.add_argument("--days", type=int, default=7)
+        sub.add_argument("--today", type=datetime.date.fromisoformat, default=datetime.date.today())
+        sub.add_argument("--log", default="review-log.json")
+        sub.set_defaults(func=func)
 
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] not in {"review", "auth", "draft", "-h", "--help"}:
+        argv.insert(0, "review")
     args = parser.parse_args(argv)
     return args.func(args)
 

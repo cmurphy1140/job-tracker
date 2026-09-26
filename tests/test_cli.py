@@ -1,4 +1,5 @@
 import io
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -137,3 +138,17 @@ class TestCli(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ReviewDefaultTest(unittest.TestCase):
+    def test_plain_csv_argument_still_runs_the_review_without_gmail(self):
+        from unittest import mock
+        from tracker_digest import cli
+        with tempfile.TemporaryDirectory() as tmp, \
+                mock.patch("builtins.input", return_value="n"), \
+                mock.patch.object(cli.gmail, "build_gmail_client") as build:
+            log = os.path.join(tmp, "log.json")
+            code = cli.main([os.path.join(os.path.dirname(__file__), "..", "sample", "leads.csv"),
+                             "--today", "2026-09-18", "--log", log])
+        self.assertEqual(code, 0)
+        build.assert_not_called()
