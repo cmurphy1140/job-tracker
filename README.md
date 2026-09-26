@@ -39,7 +39,7 @@ PYTHONPATH=src python3 -m tracker_digest.cli sample/leads.csv --today 2026-09-18
 
 1. [x] `find_stale`, `render`, `review` pass their tests.
 2. [x] `cli` end to end on the sample file; add one integration test that drives `main()` with a fake `input`.
-3. [ ] Gmail API: create a **draft** digest (never send). Credentials stay out of the repository.
+3. [ ] Gmail API: create a **draft** digest (never send). Credentials stay out of the repository. Design: [docs/milestone-3-design.md](docs/milestone-3-design.md).
 4. [x] A short debugging story in this README: one real bug, how it was found, how the fix was verified.
 
 ## Debugging story: the wrong line number
