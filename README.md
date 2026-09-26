@@ -1,8 +1,10 @@
 # tracker-digest
 
+[![Tests](https://github.com/cmurphy1140/tracker-digest/actions/workflows/tests.yml/badge.svg)](https://github.com/cmurphy1140/tracker-digest/actions/workflows/tests.yml)
+
 A small command-line tool that reads a job-application tracker (CSV), finds applications that have gone quiet, and drafts a weekly digest. Nothing leaves the program until a person approves it, and every approval is logged.
 
-Status: **core functions implemented and tested.** `find_stale`, `render`, `review`, and the `cli` all pass their tests (32/32, including Gmail draft creation and the one-time sign-in).
+Status: **core functions implemented and tested.** `find_stale`, `render`, `review`, and the `cli` all pass their tests (33/33, including Gmail draft creation and the one-time sign-in).
 
 ## The problem
 
@@ -57,7 +59,7 @@ Runs the same review step as before, then creates one Gmail draft from whatever 
 
 ## How it is tested
 
-20 tests pin the behaviour (`PYTHONPATH=src python3 -m unittest discover -s tests -v`, run 2026-09-26: 20 passed, 0 failed): the seven-day boundary (exactly seven is stale, six is not), last contact resetting the clock, only `applied` rows counting, sort order, a configurable threshold, unreadable and missing dates, the digest's text contract, the review log being appended across runs rather than overwritten, one integration test driving `cli.main()` end to end against the sample file, and one pinning the right line number when the CSV has blank lines (see the debugging story below).
+33 tests pin the behaviour (`PYTHONPATH=src python3 -m unittest discover -s tests -v`, run 2026-09-26: 33 passed, 0 failed): the seven-day boundary (exactly seven is stale, six is not), last contact resetting the clock, only `applied` rows counting, sort order, a configurable threshold, unreadable and missing dates, the digest's text contract, the review log being appended across runs rather than overwritten, one integration test driving `cli.main()` end to end against the sample file, and one pinning the right line number when the CSV has blank lines (see the debugging story below).
 
 ## Milestones
 
