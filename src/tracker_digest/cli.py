@@ -18,7 +18,11 @@ def main(argv=None):
     args = parser.parse_args(argv)
 
     with open(args.csv_path, newline="", encoding="utf-8") as f:
-        rows = list(csv.DictReader(f))
+        reader = csv.DictReader(f)
+        rows = []
+        for r in reader:
+            r["_line"] = reader.line_num
+            rows.append(r)
 
     stale, problems = find_stale(rows, args.today, args.days)
 
