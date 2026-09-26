@@ -11,7 +11,7 @@ from email.message import EmailMessage
 from .digest import render
 
 
-def build_message(approved, today, subject: str = None) -> str:
+def build_message(approved, today, subject: str | None = None) -> str:
     """Build an RFC 2822 email from the approved digest items.
 
     - Subject defaults to "Tracker digest for <today>".
