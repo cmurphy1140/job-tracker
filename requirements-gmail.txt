@@ -1,0 +1,6 @@
+# Only needed for `tracker_digest.cli auth` and `tracker_digest.cli draft`'s
+# Gmail draft step. The core tool (find_stale, render, review) and its test
+# suite need none of this — see docs/milestone-3-design.md.
+google-api-python-client==2.200.0
+google-auth-httplib2==0.4.2
+google-auth-oauthlib==1.4.1

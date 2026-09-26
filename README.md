@@ -2,7 +2,7 @@
 
 A small command-line tool that reads a job-application tracker (CSV), finds applications that have gone quiet, and drafts a weekly digest. Nothing leaves the program until a person approves it, and every approval is logged.
 
-Status: **core functions implemented and tested.** `find_stale`, `render`, `review`, and the `cli` all pass their tests (20/20). Gmail draft integration is not built yet.
+Status: **core functions implemented and tested.** `find_stale`, `render`, `review`, and the `cli` all pass their tests (32/32, including Gmail draft creation and the one-time sign-in).
 
 ## The problem
 
@@ -31,6 +31,30 @@ PYTHONPATH=src python3 -m tracker_digest.cli sample/leads.csv --today 2026-09-18
 
 `sample/leads.csv` is synthetic. No real applications or contacts are in this repository.
 
+## Gmail drafts
+
+Turns the approved digest into a real Gmail **draft** (never sends anything). Needs the three Google libraries in `requirements-gmail.txt` (`pip install -r requirements-gmail.txt`) — the core tool and its tests need none of them.
+
+**One-time setup in Google Cloud Console** (a personal project, not a shared one): create a project, enable the Gmail API, configure the OAuth consent screen (External, Testing, with your own account added as a test user), then create a **Desktop app** OAuth client and download its client secret JSON. Full steps and citations: [docs/milestone-3-design.md](docs/milestone-3-design.md#step-3-setup-researched).
+
+**Sign in once:**
+
+```bash
+python3 -m tracker_digest.cli auth --client-secret ~/Downloads/client_secret.json
+```
+
+Opens a browser to Google's consent screen, then stores the client secret and the resulting refresh token in the macOS Keychain (`tracker-digest-gmail`, `tracker-digest-gmail-token`) — never in a file in this repository.
+
+**Create a draft from the approved items:**
+
+```bash
+python3 -m tracker_digest.cli draft sample/leads.csv --today 2026-09-18
+```
+
+Runs the same review step as before, then creates one Gmail draft from whatever was approved and prints its draft id.
+
+**Re-consent every ~7 days.** In Google's Testing publishing status, a refresh token expires seven days after the last consent. When `draft` reports that the sign-in has expired, rerun `auth` with the same client secret file — no need to repeat the Cloud Console setup.
+
 ## How it is tested
 
 20 tests pin the behaviour (`PYTHONPATH=src python3 -m unittest discover -s tests -v`, run 2026-09-26: 20 passed, 0 failed): the seven-day boundary (exactly seven is stale, six is not), last contact resetting the clock, only `applied` rows counting, sort order, a configurable threshold, unreadable and missing dates, the digest's text contract, the review log being appended across runs rather than overwritten, one integration test driving `cli.main()` end to end against the sample file, and one pinning the right line number when the CSV has blank lines (see the debugging story below).
@@ -39,7 +63,7 @@ PYTHONPATH=src python3 -m tracker_digest.cli sample/leads.csv --today 2026-09-18
 
 1. [x] `find_stale`, `render`, `review` pass their tests.
 2. [x] `cli` end to end on the sample file; add one integration test that drives `main()` with a fake `input`.
-3. [ ] Gmail API: create a **draft** digest (never send). Credentials stay out of the repository. Design: [docs/milestone-3-design.md](docs/milestone-3-design.md). Step 2 of 3 done: `gmail.create_draft()` (injected client) and Keychain credential helpers (injected `security` runner).
+3. [x] Gmail API: create a **draft** digest (never send). Credentials stay out of the repository. Design: [docs/milestone-3-design.md](docs/milestone-3-design.md). All 3 steps done: `draft.build_message`, `gmail.create_draft` / Keychain helpers, and the `auth` / `draft` CLI commands (see "Gmail drafts" below).
 4. [x] A short debugging story in this README: one real bug, how it was found, how the fix was verified.
 
 ## Debugging story: the wrong line number
