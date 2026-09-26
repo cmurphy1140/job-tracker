@@ -51,8 +51,67 @@ All tests use a fake/mock Gmail client — no network, no real credentials, no r
 
 All new tests join the existing suite and must keep `PYTHONPATH=src python3 -m unittest discover -s tests` fully green with no network access required.
 
+## Step 3 setup, researched
+
+This is what Connor needs to do by hand in his Google account, and what it means for how this tool behaves afterward. Cited to Google's current docs; nothing here is from third-party blog posts.
+
+### 1. Create the Cloud project and enable the Gmail API
+
+1. Go to the [Google Cloud console](https://console.cloud.google.com/) and create a new project (or pick an existing personal one) from the project picker.
+2. Go to **Menu > APIs & Services > Library**, search "Gmail API," open it, and click **Enable**. Per Google's guide, "you can turn on one or more APIs in a single Google Cloud project" ([Enable Google Workspace APIs](https://developers.google.com/workspace/guides/enable-apis)).
+
+### 2. Configure the OAuth consent screen
+
+Since 2024 this lives under **APIs & Services > Google Auth Platform**, split into **Branding**, **Audience**, and **Clients** tabs ([Configure the OAuth consent screen and choose scopes](https://developers.google.com/workspace/guides/configure-oauth-consent)).
+
+1. **Branding**: enter an app name and a support email, then Next.
+2. **Audience**: choose the user type.
+   - **External** — required unless the Google account belongs to a Google Workspace organization. This is the right choice for a personal Gmail account.
+   - **Internal** — only available "for apps used only internally by your Google Workspace organization" ([same doc](https://developers.google.com/workspace/guides/configure-oauth-consent)); not applicable here.
+3. Leave the publishing status as **Testing** (the default for a new app) — no submission needed for personal use.
+4. **Add Connor as a test user**: on the Audience tab, add his own Google account email under test users and save. Google's docs are explicit: "If you selected External for user type, add test users by clicking Audience and entering your email address and any other authorized test users, then click Save" ([Manage App Audience](https://support.google.com/cloud/answer/15549945?hl=en)). Without this, his own account can't complete the consent flow at all — Testing status blocks any account not on that list.
+
+### 3. Create the Desktop app OAuth client
+
+1. **APIs & Services > Google Auth Platform > Clients > Create Client**.
+2. **Application type > Desktop app**.
+3. Give it a name (console-only label, e.g. "tracker-digest").
+4. Click **Create**. ([Create access credentials](https://developers.google.com/workspace/guides/create-credentials))
+
+The console shows a client ID and client secret — both go straight into the Keychain, per the existing plan above, never into a file.
+
+### 4. Is `gmail.compose` sensitive or restricted?
+
+**Restricted**, not merely sensitive. Google's [Gmail API OAuth scopes reference](https://developers.google.com/workspace/gmail/api/auth/scopes) lists `gmail.compose` ("Manage drafts and send emails") in its restricted-scope table. Restricted scopes "provide wide access to Google user data and require restricted-scope OAuth App verification," and apps that access restricted-scope data from or through a third-party server must also pass an annual third-party security assessment (CASA) ([Restricted scope verification](https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification)).
+
+**What this means for this tool**: none of that verification or CASA burden applies as long as the app stays in **Testing** status with Connor as the only test user. Verification and the security assessment are only required to move an app to a "In production," publicly-verified state for other users — not to use a restricted scope yourself, on your own data, in Testing. This tool never needs to leave Testing.
+
+### 5. Refresh token lifetime in Testing status
+
+**Seven days.** Per Google's own docs: "Authorizations by a test user will expire seven days from the time of consent. If your OAuth client requests offline access and receives a refresh token, that token will also expire" ([Manage App Audience](https://support.google.com/cloud/answer/15549945?hl=en); consistent with [OAuth app state overview](https://developers.google.com/identity/protocols/oauth2/production-readiness/overview)). The only exemption is for apps requesting solely `openid`/`email`/`profile` scopes — `gmail.compose` doesn't qualify.
+
+**What this means for the tool**: the refresh token stored in the Keychain will go stale about once a week. `build_gmail_client` will start getting `invalid_grant` from the token endpoint 7 days after the last consent. There are two ways to live with this while staying in Testing (moving to "In production" requires Google's verification + CASA for a restricted scope, which is disproportionate for a single-user personal tool):
+- **Re-consent every ~7 days**: rerun the one-time flow below whenever a run fails with `invalid_grant`, and overwrite the Keychain token. Simplest, matches the tool's low run frequency.
+- Accept this as a known limitation and surface a clear error (already partly done — `KeychainError` — but `invalid_grant` from Google's token endpoint is a separate failure mode worth catching explicitly in `gmail.py` and pointing at re-consent, as a small follow-up, not part of this doc's step 3).
+
+### 6. The one-time consent flow this tool will run
+
+Not yet built (that's the actual step 3 work), but the shape Google's library expects for a Desktop-app client is the "installed app" / loopback flow ([OAuth 2.0 for native/installed apps](https://developers.google.com/identity/protocols/oauth2/native-app), already cited above):
+
+1. The tool runs `google_auth_oauthlib.flow.InstalledAppFlow.from_client_config(...).run_local_server(port=0)` with `SCOPES` (`gmail.compose`) and the client ID/secret pulled from the Keychain.
+2. That opens Connor's browser to Google's consent screen, showing the "app isn't verified" warning (expected — the app is in Testing) plus a continue-anyway path since he's a listed test user.
+3. He signs in and approves; Google redirects to `http://127.0.0.1:<port>`, which the library's local server catches.
+4. The library exchanges the auth code for an access token + refresh token; the code writes the refresh token to the Keychain (`tracker-digest-gmail-token`), overwriting any expired one.
+5. Every later run just reads the refresh token from the Keychain and lets `google-auth` mint short-lived access tokens from it — no browser involved — until the 7-day expiry forces step 1–4 again.
+
 ## Sources
 
 - [Gmail API: users.drafts.create](https://developers.google.com/gmail/api/reference/rest/v1/users.drafts/create)
-- [Gmail API: OAuth scopes](https://developers.google.com/gmail/api/auth/scopes)
+- [Gmail API: OAuth scopes](https://developers.google.com/workspace/gmail/api/auth/scopes)
 - [Google Identity: OAuth 2.0 for native/installed apps](https://developers.google.com/identity/protocols/oauth2/native-app)
+- [Enable Google Workspace APIs](https://developers.google.com/workspace/guides/enable-apis)
+- [Configure the OAuth consent screen and choose scopes](https://developers.google.com/workspace/guides/configure-oauth-consent)
+- [Create access credentials](https://developers.google.com/workspace/guides/create-credentials)
+- [Manage App Audience (test users, 7-day refresh token expiry, 100 test user limit)](https://support.google.com/cloud/answer/15549945?hl=en)
+- [OAuth app state overview (Testing vs. production)](https://developers.google.com/identity/protocols/oauth2/production-readiness/overview)
+- [Restricted scope verification](https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification)
