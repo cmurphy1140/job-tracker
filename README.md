@@ -33,6 +33,19 @@ PYTHONPATH=src python3 -m tracker_digest.cli sample/leads.csv --today 2026-09-18
 
 `sample/leads.csv` is synthetic. No real applications or contacts are in this repository.
 
+### Sample output
+
+After answering `y` to both review questions, the digest prints:
+
+```text
+Tracker digest for 2026-09-18
+Northwind Software | Implementation Specialist | 29 days quiet | https://example.com/jobs/1
+Harbor Analytics | Applications Analyst | 8 days quiet | https://example.com/jobs/2
+
+Needs fixing:
+  line 7: Granite Data - date_applied is not a date: 'not-a-date'
+```
+
 ## Gmail drafts
 
 Turns the approved digest into a real Gmail **draft** (never sends anything). Needs the three Google libraries in `requirements-gmail.txt` (`pip install -r requirements-gmail.txt`) — the core tool and its tests need none of them.
@@ -42,7 +55,7 @@ Turns the approved digest into a real Gmail **draft** (never sends anything). Ne
 **Sign in once:**
 
 ```bash
-python3 -m tracker_digest.cli auth --client-secret ~/Downloads/client_secret.json
+PYTHONPATH=src python3 -m tracker_digest.cli auth --client-secret ~/Downloads/client_secret.json
 ```
 
 Opens a browser to Google's consent screen, then stores the client secret and the resulting refresh token in the macOS Keychain (`tracker-digest-gmail`, `tracker-digest-gmail-token`) — never in a file in this repository.
@@ -50,10 +63,12 @@ Opens a browser to Google's consent screen, then stores the client secret and th
 **Create a draft from the approved items:**
 
 ```bash
-python3 -m tracker_digest.cli draft sample/leads.csv --today 2026-09-18
+PYTHONPATH=src python3 -m tracker_digest.cli draft sample/leads.csv --today 2026-09-18
 ```
 
 Runs the same review step as before, then creates one Gmail draft from whatever was approved and prints its draft id.
+
+**Testing caveat.** The Gmail draft code is tested only with fake Gmail clients. It has not been run against a live Gmail account.
 
 **Re-consent every ~7 days.** In Google's Testing publishing status, a refresh token expires seven days after the last consent. When `draft` reports that the sign-in has expired, rerun `auth` with the same client secret file — no need to repeat the Cloud Console setup.
 
@@ -87,8 +102,10 @@ Kept honest as the project moves.
 | Part | Who wrote it | How it was verified |
 |---|---|---|
 | Project layout, function signatures and docstrings | Claude (commit `b4d8f17`, stubs raising `NotImplementedError`) | Read the stubs against the tests before implementing |
-| Unit tests (`tests/`) | Claude, from the rule I described | Ran them red against the stubs, then green after implementing: 19/19 pass as of 2026-09-23 |
+| Unit tests (`tests/`) | Claude, from the rule I described | Ran them red against the stubs, then green after implementing: 33/33 pass as of 2026-09-29 |
 | `find_stale`, `render`, `review` | Connor (commit `c529743`, no AI co-author on that commit) | All tests in `tests/test_stale.py`, `tests/test_digest.py`, `tests/test_review.py` pass |
 | `cli.py` | Claude (thin wrapper) | `tests/test_cli.py::test_cli_end_to_end_with_sample` drives `main()` against `sample/leads.csv` |
-| Blank-line bug fix and its test | Claude (commit `c9b682c`), found by a deliberate edge-case pass | The new test fails on `c4ef7a8` (`line 2` instead of `line 3`) and passes after the fix; full suite 20/20 |
+| Blank-line bug fix and its test | Claude (commit `c9b682c`), found by a deliberate edge-case pass | The new test fails on `c4ef7a8` (`line 2` instead of `line 3`) and passes after the fix; full suite 20/20 at the time (33/33 now) |
+| `draft.py`, `gmail.py`, and the `auth` / `draft` CLI commands | Claude | Unit tests with fake Gmail clients only; never run against a live account |
+| CI workflow (`.github/workflows/tests.yml`, commit `3813587`) | Codex co-authored | Runs the test suite on push; see the Actions tab |
 | This README | Claude draft, reconciled against the code and test run | "Decisions" and "One tradeoff" match my project note of 2026-09-20, written before the code; they state intent, which the commit history can't prove |
