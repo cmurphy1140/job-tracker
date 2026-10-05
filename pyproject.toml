@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tracker-digest"
+version = "0.1.0"
+description = "Find job applications that have gone quiet and draft a weekly digest."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Connor Murphy" }]
+keywords = ["job-search", "csv", "digest", "cli"]
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Office/Business",
+]
+# The core tool is standard library only.
+dependencies = []
+
+[project.optional-dependencies]
+# Only for the `auth` and `draft` commands; mirrors requirements-gmail.txt.
+gmail = [
+    "google-api-python-client==2.200.0",
+    "google-auth-httplib2==0.4.2",
+    "google-auth-oauthlib==1.4.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/cmurphy1140/tracker-digest"
+Changelog = "https://github.com/cmurphy1140/tracker-digest/blob/main/CHANGELOG.md"
+
+[project.scripts]
+tracker-digest = "tracker_digest.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -8,3 +8,8 @@ review-log.json
 # generated diagram screenshots
 docs/**/*.visual-check.*
 __pycache__/
+
+# packaging output
+dist/
+build/
+*.egg-info/

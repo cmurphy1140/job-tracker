@@ -146,6 +146,7 @@ class ReviewDefaultTest(unittest.TestCase):
         from tracker_digest import cli
         with tempfile.TemporaryDirectory() as tmp, \
                 mock.patch("builtins.input", return_value="n"), \
+                mock.patch("sys.stdout", new_callable=io.StringIO), \
                 mock.patch.object(cli.gmail, "build_gmail_client") as build:
             log = os.path.join(tmp, "log.json")
             code = cli.main([os.path.join(os.path.dirname(__file__), "..", "sample", "leads.csv"),
