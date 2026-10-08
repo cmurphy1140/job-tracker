@@ -60,7 +60,7 @@ Needs fixing:
 
 ### Demo
 
-A rendered transcript of that run, prompts and typed answers included, is at [docs/demo/tracker-digest-demo.html](docs/demo/tracker-digest-demo.html) (GitHub shows the source; open the file locally to see the page). In plain text:
+A rendered transcript of that run, prompts and typed answers included, is at docs/demo/tracker-digest-demo.html (GitHub shows the source; open the file locally to see the page). In plain text:
 
 ```text
 $ tracker-digest sample/leads.csv --today 2026-09-18
@@ -92,7 +92,7 @@ PYTHONPATH=src python3 -m tracker_digest.cli sample/leads.csv --today 2026-09-18
 
 Turns the approved digest into a real Gmail **draft** (never sends anything). Needs the three Google libraries in `requirements-gmail.txt` (`pip install -r requirements-gmail.txt`, or the `gmail` extra above) — the core tool and its tests need none of them.
 
-**One-time setup in Google Cloud Console** (a personal project, not a shared one): create a project, enable the Gmail API, configure the OAuth consent screen (External, Testing, with your own account added as a test user), then create a **Desktop app** OAuth client and download its client secret JSON. Full steps and citations: [docs/milestone-3-design.md](docs/milestone-3-design.md#step-3-setup-researched).
+**One-time setup in Google Cloud Console** (a personal project, not a shared one): create a project, enable the Gmail API, configure the OAuth consent screen (External, Testing, with your own account added as a test user), then create a **Desktop app** OAuth client and download its client secret JSON. Full steps and citations: docs/milestone-3-design.md.
 
 **Sign in once:**
 
@@ -122,7 +122,7 @@ Runs the same review step as before, then creates one Gmail draft from whatever 
 
 1. [x] `find_stale`, `render`, `review` pass their tests.
 2. [x] `cli` end to end on the sample file; add one integration test that drives `main()` with a fake `input`.
-3. [x] Gmail API: create a **draft** digest (never send). Credentials stay out of the repository. Design: [docs/milestone-3-design.md](docs/milestone-3-design.md). All 3 steps done: `draft.build_message`, `gmail.create_draft` / Keychain helpers, and the `auth` / `draft` CLI commands (see "Gmail drafts" below).
+3. [x] Gmail API: create a **draft** digest (never send). Credentials stay out of the repository. Design: docs/milestone-3-design.md. All 3 steps done: `draft.build_message`, `gmail.create_draft` / Keychain helpers, and the `auth` / `draft` CLI commands (see "Gmail drafts" below).
 4. [x] A short debugging story in this README: one real bug, how it was found, how the fix was verified.
 
 ## Debugging story: the wrong line number
