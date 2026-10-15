@@ -1,4 +1,40 @@
-# tracker-digest
+# job-tracker
+
+Reads a job-application tracker (CSV), finds the applications that have gone quiet, and drafts a weekly digest once a person approves each item.
+
+**Serves:** Murph's job search · codename **Linosa** (Pelagie Islands) · vault note [Projects/active/job-tracker/job-tracker](obsidian://open?vault=Archipelago&file=Projects%2Factive%2Fjob-tracker%2Fjob-tracker)
+
+**Status:** stage **parked**, v0.1.0 released 2026-10-04. Checked 2026-10-15: unittest 33 passed, 0 failed.
+
+**Run:** `scripts/check.sh` runs every check. CI runs the same command on every push. The tool itself: `tracker-digest sample/leads.csv --today 2026-09-18`.
+
+**Start here:** [`src/tracker_digest/stale.py`](src/tracker_digest/stale.py), where `find_stale` decides what "gone quiet" means.
+
+**Map**
+
+```
+src/tracker_digest/  stale.py (the rule), digest.py (render), review.py (approval log), cli.py, draft.py and gmail.py (Gmail drafts)
+tests/               unittest suites, one file per module
+sample/              leads.csv, a synthetic tracker
+scripts/             check.sh, the one check
+```
+
+## What this is not
+
+- Not an applicant tracking system. It reads a CSV you keep and changes nothing in it.
+- Not an automatic mailer. Nothing is sent: Gmail support creates a draft only, after review.
+- Not tested against a live Gmail account. The draft code is tested with fake clients only (UNTESTED live).
+
+## Principles
+
+1. **Read first.** Understand what exists before changing it. The record of how it was learned is part of the product.
+2. **Every claim carries its check.** Checked, Recorded or UNTESTED. A note is never the proof for a later claim.
+3. **Corrections stay on the record.** A wrong finding is corrected in place with the date, never erased.
+4. **Private stays private.** Raw data, people, addresses, device maps and client material never enter the repo. Only facts come in, plus documents the client already hands out.
+5. **Say what it is not.** Scope is written down so nobody builds the wrong thing.
+6. **One place for status.** The vault note. The repo points to it.
+
+## About tracker-digest
 
 [![Tests](https://github.com/cmurphy1140/tracker-digest/actions/workflows/tests.yml/badge.svg)](https://github.com/cmurphy1140/tracker-digest/actions/workflows/tests.yml)
 
