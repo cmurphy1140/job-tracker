@@ -36,7 +36,7 @@ scripts/             check.sh, the one check
 
 ## About tracker-digest
 
-[![Tests](https://github.com/cmurphy1140/tracker-digest/actions/workflows/tests.yml/badge.svg)](https://github.com/cmurphy1140/tracker-digest/actions/workflows/tests.yml)
+[![Tests](https://github.com/cmurphy1140/job-tracker/actions/workflows/tests.yml/badge.svg)](https://github.com/cmurphy1140/job-tracker/actions/workflows/tests.yml)
 
 A small command-line tool that reads a job-application tracker (CSV), finds applications that have gone quiet, and drafts a weekly digest. Nothing leaves the program until a person approves it, and every approval is logged.
 
