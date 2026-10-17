@@ -22,3 +22,5 @@ scripts/check.sh
 ```
 
 Runs every test under `tests/`, prints the counts and ends with `check: passed`. CI (`.github/workflows/tests.yml`) runs the same command.
+
+Run: `tracker-digest sample/leads.csv --today 2026-09-18`.
